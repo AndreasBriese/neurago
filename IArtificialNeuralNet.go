@@ -4,8 +4,9 @@ package neurago
 
 // Interface ANNs need to implement
 type IArtificialNeuralNet interface {
-	Perceptrons() []Perceptron
-	SetPerceptrons([]Perceptron)
+	Perceptrons() []*Perceptron
+	SetPerceptrons([]*Perceptron)
 	Train([][]float64)
-	OutputFrom([]float64) []float64
+	Output() []float64
+	SetInput([]float64)
 }

@@ -2,11 +2,15 @@
 // implement artificial neural networks.
 package neurago
 
-// Perceptron is the type used to represent perceptrons
+import (
+	"strconv"
+)
+
+// Perceptron is the type used to represent perceptrons in Hopfield networks
 type Perceptron struct {
 	outputValue  float64
 	inputWeights []float64
-	connections  []Perceptron
+	connections  []*Perceptron
 }
 
 // Output returns the output value of the perceptron "p"
@@ -30,17 +34,21 @@ func (p *Perceptron) SetWeights(w []float64) {
 }
 
 // Connections returns the other perceptrons connected to the perceptron "p"
-func (p *Perceptron) Connections() []Perceptron {
+func (p *Perceptron) Connections() []*Perceptron {
 	return p.connections
 }
 
 // SetConnections connects the perceptrons "perceps" to the the perceptron "p"
-func (p *Perceptron) SetConnections(perceps []Perceptron) {
+func (p *Perceptron) SetConnections(perceps []*Perceptron) {
 	p.connections = perceps
 }
 
+func (p *Perceptron) String() string {
+	return strconv.FormatFloat(p.Output(), 'e', -1, 64)
+}
+
 // NewPerceptron returns a pointer on a new initialized Perceptron
-func NewPerceptron(v, w, c) *Perceptron {
+func NewPerceptron(v float64, w []float64, c []*Perceptron) *Perceptron {
 	p := new(Perceptron)
 	p.SetOutput(v)
 	p.SetWeights(w)
