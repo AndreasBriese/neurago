@@ -3,7 +3,6 @@
 package neurago
 
 import (
-	"fmt"
 	"log"
 	"math/rand"
 	"time"
@@ -28,9 +27,9 @@ func (n *HopfieldNetwork) SetPerceptrons(p []*Perceptron) {
 func (n *HopfieldNetwork) Train(data [][]float64) {
 	var weights []float64
 	var weight float64
+
 	nbOfPerceptrons := len(n.perceptrons)
 	nbOfPatterns := float64(len(data))
-	fmt.Printf("nb of patterns: %f\n", nbOfPatterns)
 	if n.perceptrons == nil {
 		log.Panicln("Runtime Error: called method 'Train' on an uninitialized network")
 	}
@@ -85,7 +84,6 @@ func (n *HopfieldNetwork) Output() []float64 {
 		} else {
 			updatedPerceptron.SetOutput(-1)
 		}
-		fmt.Println(n.Perceptrons())
 		stabilized = isStable(n)
 	}
 	for i, perceptron := range n.Perceptrons() {
@@ -141,10 +139,26 @@ func computeEnergy(n *HopfieldNetwork) float64 {
 }
 
 // NewHopfieldNetwork creates and returns a new initialized Hopfield network
-func NewHopfieldNetwork(perceps []*Perceptron) *HopfieldNetwork {
-	if len(perceps) < 2 {
+func NewHopfieldNetwork(nbOfPerceptrons int) *HopfieldNetwork {
+	if nbOfPerceptrons < 2 {
 		log.Panicln("Runtime Error: Hopfield networks should have at least two perceptrons")
 	}
+
+	perceps := make([]*Perceptron, nbOfPerceptrons)
+	for i, _ := range perceps {
+		perceps[i] = NewPerceptron(0, make([]float64, nbOfPerceptrons-1), nil)
+	}
+
+	for i, _ := range perceps {
+		connections := []*Perceptron{}
+		for j, _ := range perceps {
+			if i != j {
+				connections = append(connections, perceps[j])
+			}
+		}
+		perceps[i].SetConnections(connections)
+	}
+
 	n := new(HopfieldNetwork)
 	n.SetPerceptrons(perceps)
 	return n
