@@ -23,17 +23,17 @@ func (n *HopfieldNetwork) SetPerceptrons(p []*Perceptron) {
 	n.perceptrons = p
 }
 
-// Train makes the network "n" learn the patterns in "data"
-func (n *HopfieldNetwork) Train(data [][]float64) {
+// Train makes the network "n" learn the patterns in "patterns"
+func (n *HopfieldNetwork) Train(patterns [][]float64) {
 	var weights []float64
 	var weight float64
 
 	nbOfPerceptrons := len(n.perceptrons)
-	nbOfPatterns := float64(len(data))
+	nbOfPatterns := float64(len(patterns))
 	if n.perceptrons == nil {
 		log.Panicln("Runtime Error: called method 'Train' on an uninitialized network")
 	}
-	for _, pattern := range data {
+	for _, pattern := range patterns {
 		for i, value := range pattern {
 			if i >= nbOfPerceptrons {
 				log.Panicln("Runtime Error: Not enough perceptrons to represent a pattern")
