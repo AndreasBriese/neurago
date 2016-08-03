@@ -11,6 +11,7 @@ import (
 // HopfieldNetwork is the implementation of Hopfield networks
 type HopfieldNetwork struct {
 	perceptrons []*Perceptron
+	trainer     Trainer
 }
 
 // Perceptrons returns the perceptrons of the network "n"
@@ -23,32 +24,21 @@ func (n *HopfieldNetwork) SetPerceptrons(p []*Perceptron) {
 	n.perceptrons = p
 }
 
+// Trainer returns the trainer of the HopfieldNetwork "n"
+func (n *HopfieldNetwork) Trainer() Trainer {
+	return n.trainer
+}
+
+// SetTrainer sets the trainer of the network to the given trainer
+func (n *HopfieldNetwork) SetTrainer(trainer Trainer) {
+	n.trainer = trainer
+}
+
 // Train makes the network "n" learn the patterns in "patterns"
 func (n *HopfieldNetwork) Train(patterns [][]float64) {
-	var weights []float64
-	var weight float64
-
-	nbOfPerceptrons := len(n.perceptrons)
-	nbOfPatterns := float64(len(patterns))
-	if n.perceptrons == nil {
-		log.Panicln("Runtime Error: called method 'Train' on an uninitialized network")
-	}
-	for _, pattern := range patterns {
-		for i, value := range pattern {
-			if i >= nbOfPerceptrons {
-				log.Panicln("Runtime Error: Not enough perceptrons to represent a pattern")
-			}
-			n.perceptrons[i].SetOutput(value)
-		}
-		for _, perceptron := range n.perceptrons {
-			weights = perceptron.Weights()
-			for i, connectedPerceptron := range perceptron.Connections() {
-				weight = 1 / nbOfPatterns * perceptron.Output() * connectedPerceptron.Output()
-				weights[i] += weight
-			}
-			perceptron.SetWeights(weights)
-		}
-	}
+	trainer := n.Trainer()
+	perceptrons := n.Perceptrons()
+	trainer.Train(perceptrons, patterns)
 }
 
 // SetInput sets the given pattern as input of the Hopfield network "n"
@@ -139,7 +129,7 @@ func computeEnergy(n *HopfieldNetwork) float64 {
 }
 
 // NewHopfieldNetwork creates and returns a new initialized Hopfield network
-func NewHopfieldNetwork(nbOfPerceptrons int) *HopfieldNetwork {
+func NewHopfieldNetwork(nbOfPerceptrons int, trainer Trainer) *HopfieldNetwork {
 	if nbOfPerceptrons < 2 {
 		log.Panicln("Runtime Error: Hopfield networks should have at least two perceptrons")
 	}
@@ -161,5 +151,6 @@ func NewHopfieldNetwork(nbOfPerceptrons int) *HopfieldNetwork {
 
 	n := new(HopfieldNetwork)
 	n.SetPerceptrons(perceps)
+	n.SetTrainer(trainer)
 	return n
 }
