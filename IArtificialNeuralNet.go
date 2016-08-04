@@ -6,7 +6,6 @@ package neurago
 type IArtificialNeuralNet interface {
 	Perceptrons() []*Perceptron
 	SetPerceptrons([]*Perceptron)
-	Train([][]float64)
 	Output() []float64
 	SetInput([]float64)
 }

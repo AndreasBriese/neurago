@@ -8,11 +8,12 @@ import (
 
 type HebbTrainer struct{}
 
-// Train is a method which trains perceptrons with a given set of patterns
-func (t *HebbTrainer) Train(perceptrons []*Perceptron, patterns [][]float64) {
+// Train is a method which trains a network with a given set of patterns
+func (t *HebbTrainer) Train(net IArtificialNeuralNet, patterns [][]float64) {
 	var weights []float64
 	var weight float64
 
+	perceptrons := net.Perceptrons()
 	nbOfPerceptrons := len(perceptrons)
 	nbOfPatterns := float64(len(patterns))
 	if perceptrons == nil {

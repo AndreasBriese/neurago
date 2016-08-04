@@ -3,5 +3,5 @@
 package neurago
 
 type Trainer interface {
-	Train([]*Perceptron, [][]float64)
+	Train(IArtificialNeuralNet, [][]float64)
 }
