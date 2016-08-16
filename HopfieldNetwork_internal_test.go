@@ -61,12 +61,12 @@ func TestOutput(t *testing.T) {
 		t.Error("HopfieldNetwork#Neurons failed: Error returned by NewHopfieldNetwork")
 	}
 	trainer := NewTestTrainer()
-	trainingPattern := []float64{-1, 1, -1}
+	trainingPattern := []float64{1, -1, 1}
 
 	trainer.Train(hopNet, [][]float64{trainingPattern})
-	hopNet.neurons[0].SetValue(-1)
-	hopNet.neurons[1].SetValue(-1)
-	hopNet.neurons[2].SetValue(-1)
+	hopNet.neurons[0].SetValue(1)
+	hopNet.neurons[1].SetValue(1)
+	hopNet.neurons[2].SetValue(1)
 	if !reflect.DeepEqual(hopNet.Output(), trainingPattern) {
 		t.Error("HopfieldNetwork#Output failed")
 	}

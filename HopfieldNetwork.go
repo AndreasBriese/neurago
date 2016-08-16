@@ -25,18 +25,18 @@ func (hn *HopfieldNetwork) SetNeurons(neurons []Neuron) {
 
 // See Neuron#Output
 func (hn *HopfieldNetwork) Output() []float64 {
-	var updatedNeuron Neuron
 	var stabilized bool
-	var rIndex int
-	neurons := hn.Neurons()
+	neurons := make([]Neuron, len(hn.Neurons()))
 	nbOfNeurons := len(neurons)
 	output := make([]float64, nbOfNeurons)
-	rand.Seed(time.Now().UTC().UnixNano())
 
+	copy(neurons, hn.Neurons())
+	rand.Seed(time.Now().UTC().UnixNano())
 	for !stabilized {
-		rIndex = rand.Intn(nbOfNeurons)
-		updatedNeuron = neurons[rIndex]
-		updatedNeuron.Update()
+		shuffleNeurons(neurons)
+		for _, neuron := range neurons {
+			neuron.Update()
+		}
 		stabilized = isStable(hn)
 	}
 	for i, neuron := range hn.Neurons() {
@@ -89,4 +89,12 @@ func isStable(n ANN) bool {
 		return true
 	}
 	return false
+}
+
+// shuffleNeurons shuffle randomly a slice of neurons
+func shuffleNeurons(neurons []Neuron) {
+	for i := range neurons {
+		j := rand.Intn(i + 1)
+		neurons[i], neurons[j] = neurons[j], neurons[i]
+	}
 }
