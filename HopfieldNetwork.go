@@ -3,160 +3,90 @@
 package neurago
 
 import (
-	"log"
+	"errors"
 	"math/rand"
 	"time"
 )
 
-// HopfieldNetwork is the implementation of Hopfield networks
+// HopfieldNetwork is the type for Hopfield recurrent neural networks
 type HopfieldNetwork struct {
-	perceptrons []*Perceptron
+	neurons []Neuron
 }
 
-// Perceptrons returns the perceptrons of the network "n"
-func (n *HopfieldNetwork) Perceptrons() []*Perceptron {
-	return n.perceptrons
+// See Neuron#Neurons
+func (hn *HopfieldNetwork) Neurons() []Neuron {
+	return hn.neurons
 }
 
-// SetPerceptrons changes the perceptrons of the network "n" for the perceptrons "p"
-func (n *HopfieldNetwork) SetPerceptrons(p []*Perceptron) {
-	n.perceptrons = p
+// See Neuron#SetNeurons
+func (hn *HopfieldNetwork) SetNeurons(neurons []Neuron) {
+	hn.neurons = neurons
 }
 
-// SetInput sets the given pattern as input of the Hopfield network "n"
-func (n *HopfieldNetwork) SetInput(pattern []float64) {
-	if len(n.Perceptrons()) != len(pattern) {
-		log.Panicln("Runtime Error: Pattern too small or too large to be represented")
-	}
-
-	for i, perceptron := range n.Perceptrons() {
-		perceptron.SetOutput(pattern[i])
-	}
-}
-
-// Output returns the value of the perceptrons after the network has been stabilized
-func (n *HopfieldNetwork) Output() []float64 {
-	output := make([]float64, len(n.Perceptrons()))
-	var updatedPerceptron *Perceptron
-	var weightedSum float64
+// See Neuron#Output
+func (hn *HopfieldNetwork) Output() []float64 {
+	var updatedNeuron Neuron
 	var stabilized bool
 	var rIndex int
-	nbOfPerceptrons := len(n.Perceptrons())
+	neurons := hn.Neurons()
+	nbOfNeurons := len(neurons)
+	output := make([]float64, nbOfNeurons)
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	for !stabilized {
-		rIndex = rand.Intn(nbOfPerceptrons)
-		updatedPerceptron = n.Perceptrons()[rIndex]
-		weightedSum = 0
-		for i, connectedPerceptron := range updatedPerceptron.Connections() {
-			weightedSum += connectedPerceptron.Output() * updatedPerceptron.Weights()[i]
-		}
-		if weightedSum >= 0 {
-			updatedPerceptron.SetOutput(1)
-		} else {
-			updatedPerceptron.SetOutput(-1)
-		}
-		stabilized = isStable(n)
+		rIndex = rand.Intn(nbOfNeurons)
+		updatedNeuron = neurons[rIndex]
+		updatedNeuron.Update()
+		stabilized = isStable(hn)
 	}
-	for i, perceptron := range n.Perceptrons() {
-		output[i] = perceptron.Output()
+	for i, neuron := range hn.Neurons() {
+		output[i] = neuron.Value()
 	}
 	return output
 }
 
-// isStable returns whether the network "n" is stable or not
-func isStable(n *HopfieldNetwork) bool {
+// See Neuron#SetInput
+func (hn *HopfieldNetwork) SetInput(inputPattern []float64) {
+	for i, neuron := range hn.Neurons() {
+		neuron.SetValue(inputPattern[i])
+	}
+}
+
+// NewHopfieldNetwork returns a pointer to a Hopfield Network initialised with
+// the array of neurons given in parameter.
+func NewHopfieldNetwork(neurons []Neuron) (*HopfieldNetwork, error) {
+	hn := &HopfieldNetwork{neurons}
+	for i, neuronA := range neurons {
+		for j, neuronB := range neurons {
+			if neuronA == nil || neuronB == nil {
+				return nil, errors.New("Uninitialized neuron")
+			}
+			if i != j {
+				neuronA.SetConnection(neuronB, 0.0)
+			}
+		}
+	}
+	return hn, nil
+}
+
+// isStable is used to test if the given network is stable
+func isStable(n ANN) bool {
 	var localField float64
-	perceptrons := n.Perceptrons()
-	nbOfPerceptrons := len(perceptrons)
+	neurons := n.Neurons()
+	nbOfNeurons := len(neurons)
 	count := 0
 
-	for _, perceptron := range perceptrons {
-		localField = computeLocalField(perceptron.Weights(), perceptron.Connections())
-		if localField >= 0 && perceptron.Output() == 1 ||
-			localField < 0 && perceptron.Output() == -1 {
+	for _, neuron := range neurons {
+		localField = computeLocalField(neuron)
+		if localField >= 0 && neuron.Value() == 1 ||
+			localField < 0 && neuron.Value() == -1 {
 
 			count++
 		}
 	}
 
-	if count == nbOfPerceptrons {
+	if count == nbOfNeurons {
 		return true
 	}
 	return false
-}
-
-// computeLocalField returns the local field for a perceptron with
-// weighted inputs "connections"
-func computeLocalField(weights []float64, connections []*Perceptron) float64 {
-	var localField float64
-
-	for i, connectedPerceptron := range connections {
-		localField += weights[i] * connectedPerceptron.Output()
-	}
-	return localField
-}
-
-// computeEnergy returns the energy of the hopfield network "n"
-func computeEnergy(n *HopfieldNetwork) float64 {
-	var netEnergy, percepEnergy, localField float64
-	perceptrons := n.Perceptrons()
-
-	for _, perceptron := range perceptrons {
-		localField = computeLocalField(perceptron.Weights(), perceptron.Connections())
-		percepEnergy = -0.5 * localField * perceptron.Output()
-		netEnergy += percepEnergy
-	}
-	return netEnergy
-}
-
-func SetWeight(pA *Perceptron, pB *Perceptron, weightValue float64) {
-	var indexA, indexB int
-	connectionsA := pA.Connections()
-	connectionsB := pB.Connections()
-	weightsA := pA.Weights()
-	weightsB := pB.Weights()
-
-	for i, p := range connectionsA {
-		if p == pB {
-			indexB = i
-			break
-		}
-	}
-	for i, p := range connectionsB {
-		if p == pA {
-			indexA = i
-			break
-		}
-	}
-	weightsA[indexB] = weightValue
-	weightsB[indexA] = weightValue
-	pA.SetWeights(weightsA)
-	pB.SetWeights(weightsB)
-}
-
-// NewHopfieldNetwork creates and returns a new initialized Hopfield network
-func NewHopfieldNetwork(nbOfPerceptrons int) *HopfieldNetwork {
-	if nbOfPerceptrons < 2 {
-		log.Panicln("Runtime Error: Hopfield networks should have at least two perceptrons")
-	}
-
-	perceps := make([]*Perceptron, nbOfPerceptrons)
-	for i, _ := range perceps {
-		perceps[i] = NewPerceptron(0, make([]float64, nbOfPerceptrons-1), nil)
-	}
-
-	for i, _ := range perceps {
-		connections := []*Perceptron{}
-		for j, _ := range perceps {
-			if i != j {
-				connections = append(connections, perceps[j])
-			}
-		}
-		perceps[i].SetConnections(connections)
-	}
-
-	n := new(HopfieldNetwork)
-	n.SetPerceptrons(perceps)
-	return n
 }

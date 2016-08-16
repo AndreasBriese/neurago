@@ -1,4 +1,2 @@
-Build tests
-Rename IArtificialNeuralNet in ArtificialNeuralNet
-Checks comments
-Refactor
+1. Replace TestANN by a simple feedforward network
+2. Then change the signature of HopfieldNetwork#isStable to take a *HopfieldNetwork as parameter

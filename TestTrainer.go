@@ -4,11 +4,10 @@ package neurago
 
 import "log"
 
-// HebbTrainer trains network using the hebb learning rule
-type HebbTrainer struct{}
+// TestTrainer is a Hebb trainer for test purposes
+type TestTrainer struct{}
 
-// Train teaches the given patterns to a network
-func (t HebbTrainer) Train(net ANN, patterns [][]float64) {
+func (t TestTrainer) Train(net ANN, patterns [][]float64) {
 	var connections map[Neuron]float64
 	neurons := net.Neurons()
 	nbOfNeurons := len(neurons)
@@ -34,7 +33,7 @@ func (t HebbTrainer) Train(net ANN, patterns [][]float64) {
 	}
 }
 
-// NewHebbTrainer returns a newly intantiated HebbTrainer
-func NewHebbTrainer() *HebbTrainer {
-	return new(HebbTrainer)
+// NewTestTrainer returns a newly intantiated TestTrainer
+func NewTestTrainer() *TestTrainer {
+	return new(TestTrainer)
 }
