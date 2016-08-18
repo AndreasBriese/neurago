@@ -4,6 +4,7 @@ package neurago
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 	"time"
 )
@@ -23,6 +24,24 @@ func (hn *HopfieldNetwork) SetNeurons(neurons []Neuron) {
 	hn.neurons = neurons
 }
 
+func neuronsToValues(neurons []Neuron) []float64 {
+	values := []float64{}
+
+	for _, neuron := range neurons {
+		values = append(values, neuron.Value())
+	}
+	return values
+}
+
+func printWeightMatrix(neurons []Neuron) {
+	for _, neuron := range neurons {
+		for _, weight := range neuron.Connections() {
+			fmt.Printf("%f ", weight)
+		}
+		fmt.Println()
+	}
+}
+
 // See Neuron#Output
 func (hn *HopfieldNetwork) Output() []float64 {
 	var stabilized bool
@@ -33,7 +52,11 @@ func (hn *HopfieldNetwork) Output() []float64 {
 	copy(neurons, hn.Neurons())
 	rand.Seed(time.Now().UTC().UnixNano())
 	for !stabilized {
+		fmt.Println(neuronsToValues(neurons))
+		printWeightMatrix(neurons)
 		shuffleNeurons(neurons)
+		fmt.Println(neuronsToValues(neurons))
+		printWeightMatrix(neurons)
 		for _, neuron := range neurons {
 			neuron.Update()
 		}

@@ -15,9 +15,9 @@ func TestTrain(t *testing.T) {
 	trainer := neurago.NewHebbTrainer()
 	trainingPattern := []float64{1, 1, -1}
 	net := neurago.NewTestANN([]neurago.Neuron{
-		neurago.NewTestNeuron(1),
-		neurago.NewTestNeuron(1),
-		neurago.NewTestNeuron(1),
+		neurago.NewTestNeuron(1, 0),
+		neurago.NewTestNeuron(1, 0),
+		neurago.NewTestNeuron(1, 0),
 	})
 	trainer.Train(net, [][]float64{
 		trainingPattern,

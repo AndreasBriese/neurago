@@ -2,54 +2,83 @@
 // implement artificial neural networks.
 package neurago
 
-// MCPNeuron is the type of McCulloch-Pitts neurons
+import "log"
+
+// MCPNeuron is the implementation of a McCulloch-Pitts artificial neuron.
 type MCPNeuron struct {
 	value       float64
+	outputFn    OutputFunction
+	inputFn     InputFunction
 	connections map[Neuron]float64
 }
 
-// see Neuron#Value
+// See Neuron#Value
 func (n MCPNeuron) Value() float64 {
-	return n.value
+	if outFn := n.OutputFunction(); outFn != nil {
+		return outFn.Output(n.value)*2 - 1
+	}
+	log.Panicln("MCPNeuron#Value -> Cannot return the neuron value, no output function defined.")
+	return 0
 }
 
-// see Neuron#SetValue
+// See Neuron#SetValue
 func (n *MCPNeuron) SetValue(value float64) {
 	n.value = value
 }
 
-// see Neuron#Connections
+// See Neuron#OutputFunction
+func (n MCPNeuron) OutputFunction() OutputFunction {
+	return n.outputFn
+}
+
+// See Neuron#SetOutputFunction
+func (n *MCPNeuron) SetOutputFunction(outFn OutputFunction) {
+	n.outputFn = outFn
+}
+
+// See Neuron#InputFunction
+func (n MCPNeuron) InputFunction() InputFunction {
+	return n.inputFn
+}
+
+// See Neuron#SetInputFunction
+func (n *MCPNeuron) SetInputFunction(inFn InputFunction) {
+	n.inputFn = inFn
+}
+
+// See Neuron#Connections
 func (n MCPNeuron) Connections() map[Neuron]float64 {
 	return n.connections
 }
 
-// see Neuron#SetConnections
+// See Neuron#SetConnections
 func (n *MCPNeuron) SetConnections(connections map[Neuron]float64) {
 	n.connections = connections
 }
 
-// see Neuron#SetConnection
+// See Neuron#SetConnection
 func (n *MCPNeuron) SetConnection(neuron Neuron, weight float64) {
 	n.connections[neuron] = weight
 }
 
-// see Neuron#Update
+// See Neuron#Update
 func (n *MCPNeuron) Update() {
-	weightedSum := 0.0
-
-	for neuron, weight := range n.Connections() {
-		weightedSum += (neuron.Value() * weight)
-	}
-	if weightedSum >= 0 {
-		n.SetValue(1.0)
+	if inFn := n.InputFunction(); inFn != nil {
+		n.SetValue(inFn.Integrate(n.Connections()))
 	} else {
-		n.SetValue(-1.0)
+		log.Panicln("MCPNeuron#Update -> Cannot update the neuron value, no input function defined.")
 	}
 }
 
-// NewMCPNeuron returns a new, initialised, MCPNeuron
-func NewMCPNeuron(value float64) *MCPNeuron {
-	neuron := &MCPNeuron{value, make(map[Neuron]float64)}
+// NewMCPNeuron returns a new, initialised, McCulloch-Pitts Neuron
+// Dependencies: StepFunction.go and WeightedSumFunction.go
+func NewMCPNeuron(value float64, outputThreshold float64) *MCPNeuron {
+	neuron := &MCPNeuron{
+		value,
+		NewStepFunction(outputThreshold),
+		NewWeightedSumFunction(),
+		make(map[Neuron]float64),
+	}
 
 	return neuron
 }

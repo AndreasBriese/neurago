@@ -11,11 +11,11 @@ import (
 // Hopfield Network set of neurons.
 func TestNeurons(t *testing.T) {
 	neurons := []Neuron{
-		NewTestNeuron(1), NewTestNeuron(1),
-		NewTestNeuron(1), NewTestNeuron(1),
-		NewTestNeuron(1), NewTestNeuron(1),
-		NewTestNeuron(1), NewTestNeuron(1),
-		NewTestNeuron(1), NewTestNeuron(1),
+		NewTestNeuron(1, 0), NewTestNeuron(1, 0),
+		NewTestNeuron(1, 0), NewTestNeuron(1, 0),
+		NewTestNeuron(1, 0), NewTestNeuron(1, 0),
+		NewTestNeuron(1, 0), NewTestNeuron(1, 0),
+		NewTestNeuron(1, 0), NewTestNeuron(1, 0),
 	}
 	hopNet, err := NewHopfieldNetwork(neurons)
 	if err != nil {
@@ -29,20 +29,14 @@ func TestNeurons(t *testing.T) {
 // TestSetNeurons tests the method "SetNeurons" by checking that it correctly sets
 // the given array of neurons as the new set of neurons.
 func TestSetNeurons(t *testing.T) {
-	hopNet, err := NewHopfieldNetwork([]Neuron{
-		NewTestNeuron(1), NewTestNeuron(1),
-		NewTestNeuron(1), NewTestNeuron(1),
-		NewTestNeuron(1), NewTestNeuron(1),
-		NewTestNeuron(1), NewTestNeuron(1),
-		NewTestNeuron(1), NewTestNeuron(1),
-	})
+	hopNet, err := NewHopfieldNetwork([]Neuron{})
 	neurons := []Neuron{}
 
 	if err != nil {
 		t.Error("HopfieldNetwork#Neurons failed: Error returned by NewHopfieldNetwork")
 	}
 	for i := 0; i < 10; i++ {
-		neurons = append(neurons, NewTestNeuron(0))
+		neurons = append(neurons, NewTestNeuron(0, 0))
 	}
 	hopNet.SetNeurons(neurons)
 	if !reflect.DeepEqual(neurons, hopNet.neurons) {
@@ -55,7 +49,7 @@ func TestSetNeurons(t *testing.T) {
 // TODO: make a table driven test version
 func TestOutput(t *testing.T) {
 	hopNet, err := NewHopfieldNetwork([]Neuron{
-		NewTestNeuron(0), NewTestNeuron(0), NewTestNeuron(0),
+		NewTestNeuron(1, 0), NewTestNeuron(1, 0), NewTestNeuron(1, 0),
 	})
 	if err != nil {
 		t.Error("HopfieldNetwork#Neurons failed: Error returned by NewHopfieldNetwork")
@@ -76,7 +70,7 @@ func TestOutput(t *testing.T) {
 // the input pattern of the calling Hopfield Network.
 func TestSetInput(t *testing.T) {
 	hopNet, err := NewHopfieldNetwork([]Neuron{
-		NewTestNeuron(0), NewTestNeuron(0), NewTestNeuron(0),
+		NewTestNeuron(0, 0), NewTestNeuron(0, 0), NewTestNeuron(0, 0),
 	})
 	if err != nil {
 		t.Error("HopfieldNetwork#Neurons failed: Error returned by NewHopfieldNetwork")
