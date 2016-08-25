@@ -1,2 +1,4 @@
-1. Replace TestANN by a simple feedforward network
-2. Then change the signature of HopfieldNetwork#isStable to take a *HopfieldNetwork as parameter
+- Add a layout system to easily build multilayer networks
+- Correct the perceptron rule trainer
+- Implement a simple feed forward network with only one layer, trained with the perceptron rule
+- Implement a multiple layer feed forward network using backpropagation

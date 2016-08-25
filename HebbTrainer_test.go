@@ -9,9 +9,9 @@ import (
 	"github.com/lemourA/neurago"
 )
 
-// TestTrain tests that HebbTrainer correctly train ANNs by checking
+// TestHebbTrain tests that HebbTrainer correctly train ANNs by checking
 // weights after training.
-func TestTrain(t *testing.T) {
+func TestHebbTrain(t *testing.T) {
 	trainer := neurago.NewHebbTrainer()
 	trainingPattern := []float64{1, 1, -1}
 	net := neurago.NewTestANN([]neurago.Neuron{

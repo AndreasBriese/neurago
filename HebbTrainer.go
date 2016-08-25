@@ -7,7 +7,7 @@ import "log"
 // HebbTrainer trains network using the hebb learning rule
 type HebbTrainer struct{}
 
-// Train teaches the given patterns to a network
+// See Trainer#Train
 func (t HebbTrainer) Train(net ANN, patterns [][]float64) {
 	var connections map[Neuron]float64
 	neurons := net.Neurons()
