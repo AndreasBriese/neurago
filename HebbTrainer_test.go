@@ -10,7 +10,7 @@ import (
 )
 
 // TestHebbTrain tests that HebbTrainer correctly trains ANNs by checking
-// that it correctly recalls learned patterns.
+// that it correctly recalls learned patterns
 func TestHebbTrain(t *testing.T) {
 	trainer := neurago.NewHebbTrainer()
 	trainingPatterns := [][]float64{
@@ -24,6 +24,14 @@ func TestHebbTrain(t *testing.T) {
 		neurago.NewTestNeuron(1, 0),
 	})
 	trainer.Train(net, trainingPatterns)
+	neurons := net.Neurons()
+	for _, neuronA := range neurons {
+		for neuronB, weight := range neuronA.Connections() {
+			if weight != neuronB.Connections()[neuronA] {
+				t.Error("HebbTrainer#Train failed (The weights are not symmetric")
+			}
+		}
+	}
 	for _, pat := range trainingPatterns {
 		net.SetInput(pat)
 		if !reflect.DeepEqual(net.Output(), pat) {
