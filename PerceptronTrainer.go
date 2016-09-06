@@ -1,9 +1,9 @@
 // Package neurago is a little library providing tools to
-// implement artificial neural networks.
+// implement artificial neural networks
 package neurago
 
 import (
-	"fmt"
+	"log"
 	"math"
 )
 
@@ -12,75 +12,63 @@ type PerceptronTrainer struct {
 	errorThreshold float64
 }
 
-// ErrorThreshold returns the errorThreshold.
+// ErrorThreshold returns the errorThreshold
 func (t PerceptronTrainer) ErrorThreshold() float64 {
 	return t.errorThreshold
 }
 
-// SetErrorThreshold sets the errorThreshold.
+// SetErrorThreshold sets the errorThreshold
 func (t *PerceptronTrainer) SetErrorThreshold(threshold float64) {
 	t.errorThreshold = threshold
 }
 
-func printWeightMatrix(neurons []Neuron) {
-	for _, neuron := range neurons {
-		for _, weight := range neuron.Connections() {
-			fmt.Printf("%f ", weight)
+// perceptronLearning applies the perceptron learning rule between
+// neurons A and B
+func perceptronLearning(net ANN, a int, b int, patterns [][]float64) float64 {
+	var errorSum float64
+	neurons := net.Neurons()
+	nbOfNeurons := len(neurons)
+	nA, nB := neurons[a], neurons[b]
+	conn := nA.Connections()
+	weight := conn[nB]
+	learningRate := 0.01
+
+	for _, pat := range patterns {
+		for i, val := range pat {
+			if i >= nbOfNeurons {
+				log.Panicln("Runtime Error: Not enough neurons to represent the pattern")
+			}
+			neurons[i].SetValue(val)
 		}
-		fmt.Println()
+		nA.Update()
+		errorSum += (pat[a] - nA.Value()) * pat[b]
 	}
+	nA.SetConnection(nB, weight+learningRate*errorSum)
+	return errorSum
 }
 
 // See Trainer#Train
 // Here PerceptronTrainer considers the first neuron of the network as the bias
 func (t PerceptronTrainer) Train(net ANN, patterns [][]float64) {
-	var newWeight float64
-	var inputs map[Neuron]float64
 	var errorSum float64
 	neurons := net.Neurons()
-	errorThreshold := t.ErrorThreshold()
-	currError := errorThreshold + 1
 	nbOfPatterns := len(patterns)
+	currError := t.ErrorThreshold() + 1
 
-	for i, neuron := range neurons {
-		inputs = neuron.Connections()
-		fmt.Println("Neuron ", i)
-
-		for currError = errorThreshold + 1; currError > errorThreshold; {
-			errorSum = 0
-
-			for _, pattern := range patterns {
-				fmt.Println("-------------")
-				fmt.Println("pattern = ", pattern)
-				net.SetInput(pattern)
-				neuron.Update()
-
-				fmt.Println("neuron value = ", neuron.Value(), "// expected = ", pattern[i])
-				if neuron.Value() != pattern[i] {
-					for inputUnit, weight := range inputs {
-						fmt.Println("******")
-						fmt.Println("******")
-						fmt.Println("input value: ", inputUnit.Value(), "input weight: ", weight)
-						newWeight = weight +
-							(pattern[i]-neuron.Value())*inputUnit.Value()
-						fmt.Println("new weight: ", newWeight)
-						neuron.SetConnection(inputUnit, newWeight)
-						fmt.Println("******")
-						fmt.Println("******")
-					}
-					errorSum += math.Abs(pattern[i] - neuron.Value())
-					// printWeightMatrix(net.Neurons())
-					// fmt.Println("pattern[", i, "] = ", pattern[i],
-					// 	"// neuron = ", neuron.Value())
-					// fmt.Println("abs(delta) = ", math.Abs(pattern[i]-neuron.Value()))
-					// fmt.Println("-------------")
+	for math.Abs(currError) > t.ErrorThreshold() {
+		for i, _ := range neurons {
+			for j, _ := range neurons {
+				if i != j {
+					errorSum = perceptronLearning(net, i, j, patterns)
+					currError = 1 / float64(nbOfPatterns) * errorSum
 				}
-
-			} // for _, pattern := range patterns
-			currError = 1 / float64(nbOfPatterns) * errorSum
-		} // for currError > errorThreshold
-	} // for i, neuron := range neurons
+			}
+		}
+	}
 }
+
+// for currError = errorThreshold + 1; currError > errorThreshold; {
+// currError = 1 / float64(nbOfPatterns) * errorSum
 
 // NewPerceptronTrainer returns a newly intantiated PerceptronTrainer
 // errThreshold is the threshold the algorithm continues to run until
