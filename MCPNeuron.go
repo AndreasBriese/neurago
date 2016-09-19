@@ -2,7 +2,10 @@
 // implement artificial neural networks.
 package neurago
 
-import "log"
+import (
+	"local/utils/math"
+	"log"
+)
 
 // MCPNeuron is the implementation of a McCulloch-Pitts artificial neuron.
 type MCPNeuron struct {
@@ -19,6 +22,10 @@ func (n MCPNeuron) Value() float64 {
 	}
 	log.Panicln("MCPNeuron#Value -> Cannot return the neuron value, no output function defined.")
 	return 0
+}
+
+func (n MCPNeuron) Val() float64 {
+	return n.value
 }
 
 // See Neuron#SetValue
@@ -62,12 +69,17 @@ func (n *MCPNeuron) SetConnection(neuron Neuron, weight float64) {
 }
 
 // See Neuron#Update
-func (n *MCPNeuron) Update() {
+func (n *MCPNeuron) Update() bool {
 	if inFn := n.InputFunction(); inFn != nil {
-		n.SetValue(inFn.Integrate(n.Connections()))
+		val := n.value
+		n.SetValue(math.ToFixed(inFn.Integrate(n.Connections()), 0))
+		if val != n.value {
+			return true
+		}
 	} else {
 		log.Panicln("MCPNeuron#Update -> Cannot update the neuron value, no input function defined.")
 	}
+	return false
 }
 
 // NewMCPNeuron returns a new, initialised, McCulloch-Pitts Neuron

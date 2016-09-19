@@ -3,39 +3,64 @@
 package neurago_test
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
 	"github.com/lemourA/neurago"
 )
 
-// TestPerceptronTrain tests that PerceptronTrainer correctly train ANNs by checking
-// weights after training.
+var perceptronTests = []struct {
+	netSize             int
+	nbOfLearnedPatterns int
+}{
+	{10, 1},
+	{10, 3},
+	{100, 10},
+	{100, 30},
+	//{500, 50},
+}
+
+// TestPerceptronTrain tests that PerceptronTrainer correctly trains ANNs by checking
+// that it correctly recalls learned patterns.
 func TestPerceptronTrain(t *testing.T) {
+	var netSize, nbOfLearnedPatterns int
+	var patterns [][]float64
+	var neurons []neurago.Neuron
+	var net neurago.ANN
 	trainer := neurago.NewPerceptronTrainer(0)
-	trainingPatterns := [][]float64{
-		[]float64{1, 1, -1},
-		[]float64{1, -1, 1},
-		[]float64{-1, 1, 1},
-	}
-	net := neurago.NewTestANN([]neurago.Neuron{
-		neurago.NewTestNeuron(1, 0),
-		neurago.NewTestNeuron(1, 0),
-		neurago.NewTestNeuron(1, 0),
-	})
-	trainer.Train(net, trainingPatterns)
-	neurons := net.Neurons()
-	for _, neuronA := range neurons {
-		for neuronB, weight := range neuronA.Connections() {
-			if weight != neuronB.Connections()[neuronA] {
-				t.Error("PerceptronTrainer#Train failed (The weights are not symmetric")
+
+	fmt.Println("--------------------")
+	for _, test := range perceptronTests {
+		netSize = test.netSize
+		neurons = make([]neurago.Neuron, netSize)
+		for i := 0; i < netSize; i++ {
+			neurons[i] = neurago.NewTestNeuron(0, 0)
+		}
+		net = neurago.NewTestANN(neurons)
+		nbOfLearnedPatterns = test.nbOfLearnedPatterns
+		patterns = generatePatterns(netSize, nbOfLearnedPatterns)
+		trainer.Train(net, patterns)
+
+		for _, neuronA := range neurons {
+			for neuronB, weight := range neuronA.Connections() {
+				if weight != neuronB.Connections()[neuronA] {
+					fmt.Println("AtoB: ", neuronA.Connections()[neuronB], " BtoA: ", neuronB.Connections()[neuronA])
+					t.Error("PerceptronTrainer#Train failed (The weights are not symmetric")
+				}
 			}
 		}
-	}
-	for _, pat := range trainingPatterns {
-		net.SetInput(pat)
-		if !reflect.DeepEqual(net.Output(), pat) {
-			t.Error("HebbTrainer#Train failed")
+
+		for i, pat := range patterns {
+			net.SetInput(pat)
+			fmt.Printf("[TEST]PerceptronTrainer//Network size: %d. pattern %d on %d -> ", netSize, i+1, nbOfLearnedPatterns)
+			if !reflect.DeepEqual(net.Output(), pat) {
+				fmt.Println("Recall Failed")
+			} else {
+				fmt.Println("Successfully Recalled")
+			}
 		}
+		fmt.Printf("\n")
 	}
+	fmt.Println("--------------------")
 }

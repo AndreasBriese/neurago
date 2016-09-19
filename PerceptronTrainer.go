@@ -7,6 +7,8 @@ import (
 	"math"
 )
 
+var percep_lRate = 0.2
+
 // PerceptronTrainer trains network using the hebb learning rule
 type PerceptronTrainer struct {
 	errorThreshold float64
@@ -25,13 +27,12 @@ func (t *PerceptronTrainer) SetErrorThreshold(threshold float64) {
 // perceptronLearning applies the perceptron learning rule between
 // neurons A and B
 func perceptronLearning(net ANN, a int, b int, patterns [][]float64) float64 {
+	var errA, errB float64
+	var sumA, sumB float64
 	var errorSum float64
 	neurons := net.Neurons()
 	nbOfNeurons := len(neurons)
 	nA, nB := neurons[a], neurons[b]
-	conn := nA.Connections()
-	weight := conn[nB]
-	learningRate := 0.01
 
 	for _, pat := range patterns {
 		for i, val := range pat {
@@ -41,9 +42,17 @@ func perceptronLearning(net ANN, a int, b int, patterns [][]float64) float64 {
 			neurons[i].SetValue(val)
 		}
 		nA.Update()
-		errorSum += (pat[a] - nA.Value()) * pat[b]
+		nB.Update()
+		errA = pat[a] - nA.Value()
+		errB = pat[b] - nB.Value()
+		sumA += errA * pat[b]
+		sumB += errB * pat[a]
+		errorSum += errA
 	}
-	nA.SetConnection(nB, weight+learningRate*errorSum)
+	oldWeight := nA.Connections()[nB]
+	newWeight := oldWeight + percep_lRate*sumA + percep_lRate*sumB
+	nA.SetConnection(nB, newWeight)
+	nB.SetConnection(nA, newWeight)
 	return errorSum
 }
 
@@ -52,23 +61,21 @@ func perceptronLearning(net ANN, a int, b int, patterns [][]float64) float64 {
 func (t PerceptronTrainer) Train(net ANN, patterns [][]float64) {
 	var errorSum float64
 	neurons := net.Neurons()
-	nbOfPatterns := len(patterns)
+	nbOfNeurons := len(neurons)
 	currError := t.ErrorThreshold() + 1
 
 	for math.Abs(currError) > t.ErrorThreshold() {
+		errorSum = 0
 		for i, _ := range neurons {
 			for j, _ := range neurons {
 				if i != j {
-					errorSum = perceptronLearning(net, i, j, patterns)
-					currError = 1 / float64(nbOfPatterns) * errorSum
+					errorSum += perceptronLearning(net, i, j, patterns)
 				}
 			}
 		}
+		currError = 1 / float64(nbOfNeurons*(nbOfNeurons-1)) * errorSum
 	}
 }
-
-// for currError = errorThreshold + 1; currError > errorThreshold; {
-// currError = 1 / float64(nbOfPatterns) * errorSum
 
 // NewPerceptronTrainer returns a newly intantiated PerceptronTrainer
 // errThreshold is the threshold the algorithm continues to run until

@@ -74,14 +74,3 @@ func NewTestANN(neurons []Neuron) *TestANN {
 	}
 	return hn
 }
-
-// computeLocalField returns the local field of a neuron
-func computeLocalField(n Neuron) float64 {
-	var localField float64
-	connections := n.Connections()
-
-	for connectedNeuron, weight := range connections {
-		localField += weight * connectedNeuron.Value()
-	}
-	return localField
-}

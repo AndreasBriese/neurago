@@ -10,6 +10,7 @@ import (
 
 // HopfieldNetwork is the type for Hopfield recurrent neural networks
 type HopfieldNetwork struct {
+	//	neurons []Neuron
 	neurons []Neuron
 }
 
@@ -23,39 +24,23 @@ func (hn *HopfieldNetwork) SetNeurons(neurons []Neuron) {
 	hn.neurons = neurons
 }
 
-// func neuronsToValues(neurons []Neuron) []float64 {
-// 	values := []float64{}
-
-// 	for _, neuron := range neurons {
-// 		values = append(values, neuron.Value())
-// 	}
-// 	return values
-// }
-
-// func printWeightMatrix(neurons []Neuron) {
-// 	for _, neuron := range neurons {
-// 		for _, weight := range neuron.Connections() {
-// 			fmt.Printf("%f ", weight)
-// 		}
-// 		fmt.Println()
-// 	}
-// }
-
 // See Neuron#Output
 func (hn *HopfieldNetwork) Output() []float64 {
-	var stabilized bool
+	var stabilized, updated bool
 	neurons := make([]Neuron, len(hn.Neurons()))
 	nbOfNeurons := len(neurons)
 	output := make([]float64, nbOfNeurons)
-
 	copy(neurons, hn.Neurons())
 	rand.Seed(time.Now().UTC().UnixNano())
 	for !stabilized {
 		shuffleNeurons(neurons)
+		updated = false
 		for _, neuron := range neurons {
-			neuron.Update()
+			if neuron.Update() == true {
+				updated = true
+			}
 		}
-		stabilized = isStable(hn)
+		stabilized = !updated
 	}
 	for i, neuron := range hn.Neurons() {
 		output[i] = neuron.Value()
@@ -115,4 +100,15 @@ func shuffleNeurons(neurons []Neuron) {
 		j := rand.Intn(i + 1)
 		neurons[i], neurons[j] = neurons[j], neurons[i]
 	}
+}
+
+// computeLocalField returns the local field of a neuron
+func computeLocalField(n Neuron) float64 {
+	var localField float64
+	connections := n.Connections()
+
+	for connectedNeuron, weight := range connections {
+		localField += weight * connectedNeuron.Value()
+	}
+	return localField
 }

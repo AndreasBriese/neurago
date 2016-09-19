@@ -22,6 +22,10 @@ func (n TestNeuron) Value() float64 {
 	return 0
 }
 
+func (n TestNeuron) Val() float64 {
+	return n.value
+}
+
 // See Neuron#SetValue
 func (n *TestNeuron) SetValue(value float64) {
 	n.value = value
@@ -63,12 +67,17 @@ func (n *TestNeuron) SetConnection(neuron Neuron, weight float64) {
 }
 
 // See Neuron#Update
-func (n *TestNeuron) Update() {
+func (n *TestNeuron) Update() bool {
 	if inFn := n.InputFunction(); inFn != nil {
+		val := n.value
 		n.SetValue(inFn.Integrate(n.Connections()))
+		if val != n.value {
+			return true
+		}
 	} else {
 		log.Panicln("TestNeuron#Update -> Cannot update the neuron value, no input function defined.")
 	}
+	return false
 }
 
 // NewTestNeuron returns a new, initialised, McCulloch-Pitts Neuron

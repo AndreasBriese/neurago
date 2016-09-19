@@ -1,3 +1,4 @@
+- Make the project less HN specific
 - Add a layout system to easily build multilayer networks
 - Correct the perceptron rule trainer
 - Implement a simple feed forward network with only one layer, trained with the perceptron rule

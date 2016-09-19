@@ -6,7 +6,7 @@ package neurago
 type Neuron interface {
 	// Value returns the current value (output) of the neuron.
 	Value() float64
-
+	Val() float64
 	// SetValue sets the given value as the new current neuron value.
 	SetValue(value float64)
 
@@ -32,6 +32,7 @@ type Neuron interface {
 	SetConnection(neuron Neuron, weight float64)
 
 	// Update computes the calling neuron output value and store it, it can then
-	// be accessed with the method "Value".
-	Update()
+	// be accessed with the method "Value". If Update results in a change of
+	// the neuron value it returns true and false otherwise
+	Update() bool
 }
