@@ -7,7 +7,7 @@ import (
 	"math"
 )
 
-var percep_lRate = 0.2
+var percep_lRate = 1
 
 // PerceptronTrainer trains network using the hebb learning rule
 type PerceptronTrainer struct {
