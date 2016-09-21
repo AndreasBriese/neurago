@@ -9,7 +9,7 @@ type StepFunction struct {
 
 // See OutputFunction#Output
 func (fct StepFunction) Output(input float64) float64 {
-	if input >= fct.theta {
+	if input > fct.theta {
 		return 1
 	}
 	return 0

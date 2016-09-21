@@ -5,9 +5,11 @@ package neurago
 import (
 	"log"
 	"math"
+
+	"github.com/gonum/matrix/mat64"
 )
 
-var percep_lRate = 1.0
+var percep_lRate = 0.1
 
 // PerceptronTrainer trains network using the hebb learning rule
 type PerceptronTrainer struct {
@@ -25,11 +27,10 @@ func (t *PerceptronTrainer) SetErrorThreshold(threshold float64) {
 }
 
 // perceptronLearning applies the perceptron learning rule between
-// neurons A and B
+// neurons A and B and returns the calculated weight
 func perceptronLearning(net ANN, a int, b int, patterns [][]float64) float64 {
 	var errA, errB float64
 	var sumA, sumB float64
-	var errorSum float64
 	neurons := net.Neurons()
 	nbOfNeurons := len(neurons)
 	nA, nB := neurons[a], neurons[b]
@@ -47,33 +48,57 @@ func perceptronLearning(net ANN, a int, b int, patterns [][]float64) float64 {
 		errB = pat[b] - nB.Value()
 		sumA += errA * pat[b]
 		sumB += errB * pat[a]
-		errorSum += errA
 	}
 	oldWeight := nA.Connections()[nB]
 	newWeight := oldWeight + percep_lRate*sumA + percep_lRate*sumB
-	nA.SetConnection(nB, newWeight)
-	nB.SetConnection(nA, newWeight)
-	return errorSum
+	return newWeight
+}
+
+// computeError returns the mean squared error of a network
+func computeError(neurons []Neuron, patterns [][]float64) float64 {
+	var sse float64
+	nbOfNeurons := len(neurons)
+	nbOfPatterns := len(patterns)
+
+	for a, nA := range neurons {
+		for _, pat := range patterns {
+			for i, val := range pat {
+				neurons[i].SetValue(val)
+			}
+			nA.Update()
+			sse += math.Pow(pat[a]-nA.Value(), 2)
+		}
+	}
+	return 1 / float64(nbOfNeurons*nbOfPatterns) * sse
 }
 
 // See Trainer#Train
 // Here PerceptronTrainer considers the first neuron of the network as the bias
 func (t PerceptronTrainer) Train(net ANN, patterns [][]float64) {
-	var errorSum float64
+	var newWeight float64
 	neurons := net.Neurons()
 	nbOfNeurons := len(neurons)
 	currError := t.ErrorThreshold() + 1
+	weights := mat64.NewDense(nbOfNeurons, nbOfNeurons, make([]float64, nbOfNeurons*nbOfNeurons))
 
 	for math.Abs(currError) > t.ErrorThreshold() {
-		errorSum = 0
 		for i, _ := range neurons {
 			for j, _ := range neurons {
 				if i != j {
-					errorSum += perceptronLearning(net, i, j, patterns)
+					newWeight = perceptronLearning(net, i, j, patterns)
+					weights.Set(i, j, newWeight)
+					weights.Set(j, i, newWeight)
 				}
 			}
 		}
-		currError = 1 / float64(nbOfNeurons*(nbOfNeurons-1)) * errorSum
+		for i, nA := range neurons {
+			for j, nB := range neurons {
+				if i != j {
+					nA.SetConnection(nB, weights.At(i, j))
+				}
+			}
+		}
+		currError = computeError(neurons, patterns)
 	}
 }
 
