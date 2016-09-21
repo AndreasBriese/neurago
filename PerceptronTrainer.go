@@ -10,7 +10,7 @@ import (
 	"github.com/gonum/matrix/mat64"
 )
 
-var percep_lRate = 0.001
+var percep_lRate = 0.01
 
 // PerceptronTrainer trains network using the hebb learning rule
 type PerceptronTrainer struct {
