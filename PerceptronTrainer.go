@@ -3,13 +3,14 @@
 package neurago
 
 import (
+	"fmt"
 	"log"
 	"math"
 
 	"github.com/gonum/matrix/mat64"
 )
 
-var percep_lRate = 0.01
+var percep_lRate = 1.0
 
 // PerceptronTrainer trains network using the hebb learning rule
 type PerceptronTrainer struct {
@@ -75,7 +76,8 @@ func computeError(neurons []Neuron, patterns [][]float64) float64 {
 // See Trainer#Train
 // Here PerceptronTrainer considers the first neuron of the network as the bias
 func (t PerceptronTrainer) Train(net ANN, patterns [][]float64) {
-	var newWeight float64
+	var newWeight, prevError float64
+	var sameErrorCount int
 	neurons := net.Neurons()
 	nbOfNeurons := len(neurons)
 	currError := t.ErrorThreshold() + 1
@@ -98,7 +100,18 @@ func (t PerceptronTrainer) Train(net ANN, patterns [][]float64) {
 				}
 			}
 		}
+		prevError = currError
 		currError = computeError(neurons, patterns)
+		if prevError == currError {
+			sameErrorCount++
+			if sameErrorCount > 10 {
+				fmt.Println("Error is not minimized anymore, last value: ", currError)
+				sameErrorCount = 0
+			} else {
+				sameErrorCount = 0
+			}
+		}
+		//fmt.Println("Error:", currError)
 	}
 }
 
