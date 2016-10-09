@@ -58,8 +58,9 @@ func perceptronLearning(net ANN, a int, b int, patterns [][]float64) float64 {
 	return newWeight
 }
 
-func networkCopy(neurons []Neuron) []Neuron {
+func networkCopy(net ANN) ANN {
 	var connections map[Neuron]float64
+	neurons := net.Neurons()
 	nLen := len(neurons)
 	cpy := make([]Neuron, nLen)
 	for i, neuron := range neurons {
@@ -73,7 +74,8 @@ func networkCopy(neurons []Neuron) []Neuron {
 			}
 		}
 	}
-	return cpy
+	netCpy, _ := NewHopfieldNetwork(cpy)
+	return netCpy
 }
 
 // computeError returns the mean squared error of a network
@@ -114,6 +116,10 @@ func (t PerceptronTrainer) Train(net ANN, patterns [][]float64) {
 	update := 1
 	var error float64
 
+	//--
+	testNet := networkCopy(net)
+	//--
+
 	for math.Abs(currError) > t.ErrorThreshold() {
 		for i, _ := range neurons {
 			for j, _ := range neurons {
@@ -122,12 +128,14 @@ func (t PerceptronTrainer) Train(net ANN, patterns [][]float64) {
 					weights.Set(i, j, newWeight)
 					weights.Set(j, i, newWeight)
 					//--
-					error = computeError(networkCopy(neurons), patterns)
+					testNet.Neurons()[i].SetConnection(testNet.Neurons()[j], weights.At(i, j))
+					error = computeError(testNet.Neurons(), patterns)
 					csvWriter.Write([]string{
 						strconv.Itoa(update),
 						strconv.FormatFloat(error, 'f', -1, 64),
 					})
 					update++
+					//--
 				}
 			}
 		}
