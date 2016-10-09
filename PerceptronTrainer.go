@@ -3,9 +3,12 @@
 package neurago
 
 import (
+	"encoding/csv"
 	"fmt"
 	"log"
 	"math"
+	"os"
+	"strconv"
 
 	"github.com/gonum/matrix/mat64"
 )
@@ -74,7 +77,6 @@ func computeError(neurons []Neuron, patterns [][]float64) float64 {
 }
 
 // See Trainer#Train
-// Here PerceptronTrainer considers the first neuron of the network as the bias
 func (t PerceptronTrainer) Train(net ANN, patterns [][]float64) {
 	var newWeight, prevError float64
 	var sameErrorCount int
@@ -82,6 +84,16 @@ func (t PerceptronTrainer) Train(net ANN, patterns [][]float64) {
 	nbOfNeurons := len(neurons)
 	currError := t.ErrorThreshold() + 1
 	weights := mat64.NewDense(nbOfNeurons, nbOfNeurons, make([]float64, nbOfNeurons*nbOfNeurons))
+
+	file, _ := os.OpenFile("percep_result.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	defer file.Close()
+	csvWriter := csv.NewWriter(file)
+	csvWriter.Write([]string{
+		"update",
+		"error",
+	})
+	defer csvWriter.Flush()
+	update := 1
 
 	for math.Abs(currError) > t.ErrorThreshold() {
 		for i, _ := range neurons {
@@ -111,7 +123,12 @@ func (t PerceptronTrainer) Train(net ANN, patterns [][]float64) {
 				sameErrorCount = 0
 			}
 		}
-		//fmt.Println("Error:", currError)
+		//--
+		csvWriter.Write([]string{
+			strconv.Itoa(update),
+			strconv.FormatFloat(currError, 'f', -1, 64),
+		})
+		update++
 	}
 }
 
