@@ -2,12 +2,7 @@
 // implement artificial neural networks.
 package neurago
 
-import (
-	"encoding/csv"
-	"log"
-	"os"
-	"strconv"
-)
+import "log"
 
 // HebbTrainer trains network using the hebb learning rule
 type HebbTrainer struct{}
@@ -19,15 +14,15 @@ func (t HebbTrainer) Train(net ANN, patterns [][]float64) {
 	nbOfNeurons := len(neurons)
 	nbOfPatterns := len(patterns)
 
-	file, _ := os.OpenFile("hebb_result.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-	defer file.Close()
-	csvWriter := csv.NewWriter(file)
-	csvWriter.Write([]string{
-		"update",
-		"error",
-	})
-	defer csvWriter.Flush()
-	update := 1
+	// file, _ := os.OpenFile("hebb_result.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	// defer file.Close()
+	// csvWriter := csv.NewWriter(file)
+	// csvWriter.Write([]string{
+	// 	"update",
+	// 	"error",
+	// })
+	// defer csvWriter.Flush()
+	// update := 1
 
 	if neurons == nil {
 		log.Panicln("Runtime Error: called method 'Train' on an uninitialized network")
@@ -44,19 +39,18 @@ func (t HebbTrainer) Train(net ANN, patterns [][]float64) {
 			for inputNeuron, weight := range connections {
 				weight = 1 / float64(nbOfPatterns) * neuron.Value() * inputNeuron.Value()
 				neuron.SetConnection(inputNeuron, connections[inputNeuron]+weight)
-				//--
-				error := computeError(neurons, patterns)
+				//error := computeError(neurons, patterns)
 				for i, value := range pattern {
 					if i >= nbOfNeurons {
 						log.Panicln("Runtime Error: Not enough neurons to represent the pattern")
 					}
 					neurons[i].SetValue(value)
 				}
-				csvWriter.Write([]string{
-					strconv.Itoa(update),
-					strconv.FormatFloat(error, 'f', -1, 64),
-				})
-				update++
+				// csvWriter.Write([]string{
+				// 	strconv.Itoa(update),
+				// 	strconv.FormatFloat(error, 'f', -1, 64),
+				// })
+				// update++
 			}
 		}
 	}
