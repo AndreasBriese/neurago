@@ -4,6 +4,7 @@ package neurago
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 	"time"
 )
@@ -44,6 +45,9 @@ func (hn *HopfieldNetwork) Output() []float64 {
 	}
 	for i, neuron := range hn.Neurons() {
 		output[i] = neuron.Value()
+	}
+	if len(output) == 0 {
+		fmt.Println("Neurons:\n", hn.Neurons(), "\nlen:", len(hn.Neurons()))
 	}
 	return output
 }
