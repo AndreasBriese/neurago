@@ -33,6 +33,7 @@ func (hn *HopfieldNetwork) Output() []float64 {
 	output := make([]float64, nbOfNeurons)
 	copy(neurons, hn.Neurons())
 	rand.Seed(time.Now().UTC().UnixNano())
+	start := time.Now()
 	for !stabilized {
 		shuffleNeurons(neurons)
 		updated = false
@@ -42,12 +43,18 @@ func (hn *HopfieldNetwork) Output() []float64 {
 			}
 		}
 		stabilized = !updated
+		if time.Since(start) > (time.Minute * 3) {
+			fmt.Printf("Network stabilization is taking too long, ")
+			fmt.Printf("checking weight symmetry... ")
+			if !isSymmetric(hn) {
+				fmt.Println("Not symmetric.")
+			} else {
+				fmt.Println("Symmetric.")
+			}
+		}
 	}
 	for i, neuron := range hn.Neurons() {
 		output[i] = neuron.Value()
-	}
-	if len(output) == 0 {
-		fmt.Println("Neurons:\n", hn.Neurons(), "\nlen:", len(hn.Neurons()))
 	}
 	return output
 }
@@ -115,4 +122,19 @@ func computeLocalField(n Neuron) float64 {
 		localField += weight * connectedNeuron.Value()
 	}
 	return localField
+}
+
+// Checks if the network is symmetric
+func isSymmetric(net ANN) bool {
+	neurons := net.Neurons()
+	for i, nA := range neurons {
+		for j, nB := range neurons {
+			if i != j {
+				if nA.Connections()[nB] != nB.Connections()[nA] {
+					return false
+				}
+			}
+		}
+	}
+	return true
 }

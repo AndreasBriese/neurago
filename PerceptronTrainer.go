@@ -3,12 +3,9 @@
 package neurago
 
 import (
-	"encoding/csv"
 	"fmt"
 	"log"
 	"math"
-	"os"
-	"strconv"
 
 	"github.com/gonum/matrix/mat64"
 )
@@ -58,26 +55,6 @@ func perceptronLearning(net ANN, a int, b int, patterns [][]float64) float64 {
 	return newWeight
 }
 
-func networkCopy(net ANN) ANN {
-	var connections map[Neuron]float64
-	neurons := net.Neurons()
-	nLen := len(neurons)
-	cpy := make([]Neuron, nLen)
-	for i, neuron := range neurons {
-		cpy[i] = NewMCPNeuron(neuron.Val(), 0)
-	}
-	for i, nA := range neurons {
-		connections = nA.Connections()
-		for j, nB := range neurons {
-			if i != j {
-				cpy[i].SetConnection(cpy[j], connections[nB])
-			}
-		}
-	}
-	netCpy, _ := NewHopfieldNetwork(cpy)
-	return netCpy
-}
-
 // computeError returns the mean squared error of a network
 func computeError(neurons []Neuron, patterns [][]float64) float64 {
 	var sse float64
@@ -105,21 +82,6 @@ func (t PerceptronTrainer) Train(net ANN, patterns [][]float64) {
 	currError := t.ErrorThreshold() + 1
 	weights := mat64.NewDense(nbOfNeurons, nbOfNeurons, make([]float64, nbOfNeurons*nbOfNeurons))
 
-	file, _ := os.OpenFile("percep_result.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-	defer file.Close()
-	csvWriter := csv.NewWriter(file)
-	csvWriter.Write([]string{
-		"update",
-		"error",
-	})
-	defer csvWriter.Flush()
-	update := 1
-	var error float64
-
-	//--
-	testNet := networkCopy(net)
-	//--
-
 	for math.Abs(currError) > t.ErrorThreshold() {
 		for i, _ := range neurons {
 			for j, _ := range neurons {
@@ -127,15 +89,6 @@ func (t PerceptronTrainer) Train(net ANN, patterns [][]float64) {
 					newWeight = perceptronLearning(net, i, j, patterns)
 					weights.Set(i, j, newWeight)
 					weights.Set(j, i, newWeight)
-					//--
-					testNet.Neurons()[i].SetConnection(testNet.Neurons()[j], weights.At(i, j))
-					error = computeError(testNet.Neurons(), patterns)
-					csvWriter.Write([]string{
-						strconv.Itoa(update),
-						strconv.FormatFloat(error, 'f', -1, 64),
-					})
-					update++
-					//--
 				}
 			}
 		}
