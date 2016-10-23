@@ -3,11 +3,8 @@
 package neurago
 
 import (
-	"encoding/csv"
 	"local/utils/math"
 	"log"
-	"os"
-	"strconv"
 
 	"github.com/gonum/matrix/mat64"
 )
@@ -44,16 +41,6 @@ func (t PseudoInverseTrainer) Train(net ANN, patterns [][]float64) {
 	correl := mat64.NewDense(nbOfPatterns, nbOfPatterns, make([]float64, nbOfPatterns*nbOfPatterns))
 	correlInv := mat64.NewDense(nbOfPatterns, nbOfPatterns, make([]float64, nbOfPatterns*nbOfPatterns))
 
-	file, _ := os.OpenFile("pinv_result.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-	defer file.Close()
-	csvWriter := csv.NewWriter(file)
-	csvWriter.Write([]string{
-		"update",
-		"error",
-	})
-	defer csvWriter.Flush()
-	update := 1
-
 	for v := 0; v < nbOfPatterns; v++ {
 		for u := 0; u < nbOfPatterns; u++ {
 			sum = 0
@@ -70,13 +57,6 @@ func (t PseudoInverseTrainer) Train(net ANN, patterns [][]float64) {
 		for j, nB := range net.Neurons() {
 			if i != j {
 				computeWeight(net, nA, nB, i, j, patterns, correlInv)
-				//--
-				error := computeError(net.Neurons(), patterns)
-				csvWriter.Write([]string{
-					strconv.Itoa(update),
-					strconv.FormatFloat(error, 'f', -1, 64),
-				})
-				update++
 			}
 		}
 	}
