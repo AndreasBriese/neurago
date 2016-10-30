@@ -27,7 +27,7 @@ var refreshTests = []struct {
 			{neurago.NewMCPNeuron(1, 0), -1.0},
 			{neurago.NewMCPNeuron(1, 0), -1.0},
 		},
-		-1.0, // Test 1: expected output
+		-1, // Test 1: expected output
 	},
 	// Test 2
 	{
@@ -45,7 +45,7 @@ var refreshTests = []struct {
 			{neurago.NewMCPNeuron(1, 0), 1},
 			{neurago.NewMCPNeuron(1, 0), 0},
 		},
-		1, // Test 3: expected output
+		-1, // Test 3: expected output
 	},
 }
 

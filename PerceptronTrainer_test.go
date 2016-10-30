@@ -28,7 +28,7 @@ func TestPerceptronTrain(t *testing.T) {
 	var patterns [][]float64
 	var neurons []neurago.Neuron
 	var net neurago.ANN
-	trainer := neurago.NewPerceptronTrainer(0)
+	trainer := neurago.NewPerceptronTrainer(0.0014, 0.3)
 
 	fmt.Println("--------------------")
 	for _, test := range perceptronTests {

@@ -3,18 +3,16 @@
 package neurago
 
 import (
-	"fmt"
 	"log"
 	"math"
 
 	"github.com/gonum/matrix/mat64"
 )
 
-var percep_lRate = 0.01
-
 // PerceptronTrainer trains network using the hebb learning rule
 type PerceptronTrainer struct {
 	errorThreshold float64
+	lRate          float64
 }
 
 // ErrorThreshold returns the errorThreshold
@@ -27,15 +25,24 @@ func (t *PerceptronTrainer) SetErrorThreshold(threshold float64) {
 	t.errorThreshold = threshold
 }
 
+// LearningRate returns the learning rate
+func (t PerceptronTrainer) LearningRate() float64 {
+	return t.lRate
+}
+
+// SetLearningRate sets the learning rate
+func (t *PerceptronTrainer) SetLearningRate(lRate float64) {
+	t.lRate = lRate
+}
+
 // perceptronLearning applies the perceptron learning rule between
 // neurons A and B and returns the calculated weight
-func perceptronLearning(net ANN, a int, b int, patterns [][]float64) float64 {
+func perceptronLearning(net ANN, a int, b int, patterns [][]float64, lRate float64) float64 {
 	var errA, errB float64
 	var sumA, sumB float64
 	neurons := net.Neurons()
 	nbOfNeurons := len(neurons)
 	nA, nB := neurons[a], neurons[b]
-
 	for _, pat := range patterns {
 		for i, val := range pat {
 			if i >= nbOfNeurons {
@@ -51,7 +58,7 @@ func perceptronLearning(net ANN, a int, b int, patterns [][]float64) float64 {
 		sumB += errB * pat[a]
 	}
 	oldWeight := nA.Connections()[nB]
-	newWeight := oldWeight + percep_lRate*sumA + percep_lRate*sumB
+	newWeight := oldWeight + lRate*sumA + lRate*sumB
 	return newWeight
 }
 
@@ -81,12 +88,11 @@ func (t PerceptronTrainer) Train(net ANN, patterns [][]float64) {
 	nbOfNeurons := len(neurons)
 	currError := t.ErrorThreshold() + 1
 	weights := mat64.NewDense(nbOfNeurons, nbOfNeurons, make([]float64, nbOfNeurons*nbOfNeurons))
-
 	for math.Abs(currError) > t.ErrorThreshold() {
 		for i, _ := range neurons {
 			for j, _ := range neurons {
 				if i != j {
-					newWeight = perceptronLearning(net, i, j, patterns)
+					newWeight = perceptronLearning(net, i, j, patterns, t.lRate)
 					weights.Set(i, j, newWeight)
 					weights.Set(j, i, newWeight)
 				}
@@ -101,13 +107,16 @@ func (t PerceptronTrainer) Train(net ANN, patterns [][]float64) {
 		}
 		prevError = currError
 		currError = computeError(neurons, patterns)
-		if prevError == currError {
-			sameErrorCount++
-			if sameErrorCount > 10 {
-				fmt.Println("Error is not minimized anymore, last value: ", currError)
-				sameErrorCount = 0
+		if prevError <= currError {
+			if sameErrorCount >= 2 {
+				if t.LearningRate() > 0.01 {
+					t.SetLearningRate(t.LearningRate() - 0.01)
+					sameErrorCount = 0
+				} else {
+					return
+				}
 			} else {
-				sameErrorCount = 0
+				sameErrorCount++
 			}
 		}
 	}
@@ -116,9 +125,10 @@ func (t PerceptronTrainer) Train(net ANN, patterns [][]float64) {
 // NewPerceptronTrainer returns a newly intantiated PerceptronTrainer
 // errThreshold is the threshold the algorithm continues to run until
 // it gets the ANN output below.
-func NewPerceptronTrainer(errThreshold float64) *PerceptronTrainer {
+func NewPerceptronTrainer(errThreshold, lRate float64) *PerceptronTrainer {
 	trainer := new(PerceptronTrainer)
 
 	trainer.SetErrorThreshold(errThreshold)
+	trainer.SetLearningRate(lRate)
 	return trainer
 }
